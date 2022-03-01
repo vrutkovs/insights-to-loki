@@ -8,4 +8,10 @@ scrape_configs:
   - targets:
     - localhost
     labels:
-      __path__: /var/log/*
+      __path__: /tmp/log/diffs.log
+  pipeline_stages:
+  - json:
+      expressions:
+        diff:
+        file:
+        snapshot:

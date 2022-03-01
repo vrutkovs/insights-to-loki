@@ -67,7 +67,7 @@ os.makedirs(promtaildata_dir)
 cmdline = [
   "docker", "run", "-d", "--name=promtail",
   f"-v={promtailconfig_dir}:/etc/promtail:z",
-  f"-v={diff_dir}:/var/log:z",
+  f"-v={diff_dir}:/tmp/log:z",
   f"-v={promtaildata_dir}:/run/promtail:z",
   "-ti", "docker.io/grafana/promtail:2.4.0"
 ]
@@ -78,37 +78,37 @@ print(f"Building file diffs in {diff_dir}")
 snapshots = os.listdir(yamls_dir)
 pairs = list(zip(snapshots, snapshots[1:] + snapshots[:1]))
 
-for (first, second) in pairs:
-  first_dir = os.path.join(yamls_dir, first)
-  second_dir = os.path.join(yamls_dir, second)
+diff_path = os.path.join(diff_dir, "diffs.log")
+with open(diff_path, "w") as f:
+  for (first, second) in pairs:
+    first_dir = os.path.join(yamls_dir, first)
+    second_dir = os.path.join(yamls_dir, second)
 
-  for filename in found_files:
-    # Diff for json/yaml files only
-    if not filename.endswith(".json") and not filename.endswith(".yaml"):
-      continue
+    for filename in found_files:
+      # Diff for json/yaml files only
+      if not filename.endswith(".json") and not filename.endswith(".yaml"):
+        continue
 
-    # Skip diff if either of files doesn't exist
-    first_path = os.path.join(first_dir, filename)
-    second_path = os.path.join(second_dir, filename)
-    if not os.path.isfile(first_path) or not os.path.isfile(second_path):
-      continue
-    cmdline = ["dyff", "between", "--omit-header", first_path, second_path]
+      # Skip diff if either of files doesn't exist
+      first_path = os.path.join(first_dir, filename)
+      second_path = os.path.join(second_dir, filename)
+      if not os.path.isfile(first_path) or not os.path.isfile(second_path):
+        continue
+      cmdline = ["dyff", "between", "--omit-header", first_path, second_path]
 
-    proc = run(cmdline, capture_output=True)
-    diff_output = proc.stdout.decode("utf-8")
-    if len(diff_output) == 0:
-      continue
+      proc = run(cmdline, capture_output=True)
+      diff_output = proc.stdout.decode("utf-8")
+      if len(diff_output) == 0:
+        continue
 
-    # Convert output into json
-    data = {
-      "file": filename,
-      "snapshot": second,
-      "diff": diff_output,
-    }
-    diff_filename = hashlib.sha256().hexdigest()[:8]
-    diff_path = os.path.join(diff_dir, diff_filename)
-    with open(diff_path, "w") as f:
-      json.dump(data, f)
+      # Convert output into json
+      data = {
+        "file": filename,
+        "snapshot": second,
+        "diff": diff_output,
+      }
+      f.write(json.dumps(data))
+      f.write("\n")
 
 print("Cleaning up empty dirs")
 walk = list(os.walk(diff_dir))
