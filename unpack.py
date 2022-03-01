@@ -75,3 +75,26 @@ walk = list(os.walk(diff_dir))
 for path, _, _ in walk[::-1]:
     if len(os.listdir(path)) == 0:
         os.rmdir(path)
+
+print("Starting loki container")
+out, err = Popen(["docker", "rm", "-f", "loki"]).communicate()
+lokiconfig_dir = os.path.abspath(os.path.join(os.getcwd(), "lokiconfig"))
+lokidata_dir = os.path.join(dest_dir, "loki")
+os.makedirs(lokidata_dir)
+cmdline = [
+  "docker", "run", "-d", "--name=loki", "-u=0",
+  f"-v={lokiconfig_dir}:/etc/loki:z",
+  f"-v={lokidata_dir}:/srv/loki:z",
+  "-p=3100:3100",
+  "-ti", "docker.io/grafana/loki:2.4.0"
+]
+Popen(cmdline).communicate()
+
+print("Starting grafana container")
+out, err = Popen(["docker", "rm", "-f", "grafana"]).communicate()
+cmdline = [
+  "docker", "run", "-d", "--name=grafana",
+  "-p=3000:3000",
+  "-ti", "docker.io/grafana/grafana:8.4.2"
+]
+Popen(cmdline).communicate()
