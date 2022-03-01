@@ -101,15 +101,16 @@ with open(diff_path, "w") as f:
       if len(diff_output) == 0:
         continue
 
-      # Convert output into json
-      # TODO convert snapshot into date
-      data = {
-        "file": filename,
-        "snapshot": second,
-        "diff": diff_output,
-      }
-      f.write(json.dumps(data))
-      f.write("\n")
+      for stanza in diff_output.strip().split("\n\n"):
+        # Store output into json
+        # TODO convert snapshot into date
+        data = {
+          "file": filename,
+          "snapshot": second,
+          "diff": line,
+        }
+        f.write(json.dumps(stanza))
+        f.write("\n")
 
 print("Cleaning up empty dirs")
 walk = list(os.walk(diff_dir))
