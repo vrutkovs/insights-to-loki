@@ -3,8 +3,9 @@ import os.path
 import sys
 import tarfile
 import tempfile
-from subprocess import run
 import json
+import hashlib
+from subprocess import run
 
 if len(sys.argv) < 2:
   print("Usage: unpack.py <directory>")
@@ -104,7 +105,9 @@ for (first, second) in pairs:
       "snapshot": second,
       "diff": diff_output,
     }
-    with tempfile.NamedTemporaryFile(dir=diff_dir, delete=False, mode='w') as f:
+    diff_filename = hashlib.sha256().hexdigest()[:8]
+    diff_path = os.path.join(diff_dir, diff_filename)
+    with open(diff_path, "w") as f:
       json.dump(data, f)
 
 print("Cleaning up empty dirs")
