@@ -102,14 +102,18 @@ with open(diff_path, "w") as f:
         continue
 
       for stanza in diff_output.strip().split("\n\n"):
-        # Store output into json
-        # TODO convert snapshot into date
         data = {
           "file": filename,
           "snapshot": second,
-          "diff": line,
         }
-        f.write(json.dumps(stanza))
+        stanza_split = stanza.split('\n')
+        if len(stanza_split) == 1:
+          data['diff'] = stanza
+        else:
+          data["field"] = stanza_split[0].strip()
+          data["operation"] = stanza_split[1].strip()
+          data["diff"] = "/n".join(stanza_split[2:])
+        f.write(json.dumps(data))
         f.write("\n")
 
 print("Cleaning up empty dirs")
