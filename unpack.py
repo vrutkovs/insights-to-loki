@@ -3,6 +3,7 @@ import os.path
 import sys
 import shutil
 import tarfile
+import tempfile
 from subprocess import Popen
 
 if len(sys.argv) < 2:
@@ -12,13 +13,11 @@ if len(sys.argv) < 2:
 src_dir = os.path.abspath(sys.argv[1])
 dest_dir = os.path.join(src_dir, "yamls")
 
-print(f"Unpacking to {dest_dir}")
+dest_dir = tempfile.mkdtemp()
+yamls_dir = os.path.join(dest_dir, "yamls")
 
-try:
-  shutil.rmtree(dest_dir)
-except FileNotFoundError:
-  pass
-os.makedirs(dest_dir)
+print(f"Unpacking to {yamls_dir}")
+os.makedirs(yamls_dir)
 
 found_files = set([])
 
@@ -31,16 +30,12 @@ for filename in os.listdir(src_dir):
   archive_contents = set(file.getnames())
   found_files.update(archive_contents)
 
-  file.extractall(os.path.join(dest_dir, filename))
+  file.extractall(os.path.join(yamls_dir, filename))
   file.close()
 
-print("Building file diffs")
-diff_dir = os.path.join(src_dir, "diffs")
-try:
-  shutil.rmtree(diff_dir)
-except FileNotFoundError:
-  pass
+diff_dir = os.path.join(dest_dir, "diffs")
 os.makedirs(diff_dir)
+print(f"Building file diffs in {diff_dir}")
 
 snapshots = os.listdir(dest_dir)
 pairs = list(zip(snapshots, snapshots[1:] + snapshots[:1]))
@@ -77,7 +72,7 @@ for (first, second) in pairs:
     if os.path.getsize(diff_path) == 0:
       os.remove(diff_path)
 
-print("Cleaning up")
+print("Cleaning up empty dirs")
 walk = list(os.walk(diff_dir))
 for path, _, _ in walk[::-1]:
     if len(os.listdir(path)) == 0:
