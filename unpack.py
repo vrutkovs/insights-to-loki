@@ -1,7 +1,6 @@
 import os
 import os.path
 import sys
-import shutil
 import tarfile
 import tempfile
 from subprocess import Popen
@@ -11,7 +10,6 @@ if len(sys.argv) < 2:
   sys.exit(1)
 
 src_dir = os.path.abspath(sys.argv[1])
-dest_dir = os.path.join(src_dir, "yamls")
 
 dest_dir = tempfile.mkdtemp()
 yamls_dir = os.path.join(dest_dir, "yamls")
