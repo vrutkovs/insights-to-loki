@@ -75,7 +75,7 @@ run(cmdline)
 
 print(f"Building file diffs in {diff_dir}")
 
-snapshots = os.listdir(yamls_dir)
+snapshots = sorted(os.listdir(yamls_dir))
 pairs = list(zip(snapshots, snapshots[1:] + snapshots[:1]))
 
 diff_path = os.path.join(diff_dir, "diffs.log")
@@ -102,6 +102,7 @@ with open(diff_path, "w") as f:
         continue
 
       # Convert output into json
+      # TODO convert snapshot into date
       data = {
         "file": filename,
         "snapshot": second,
