@@ -1,5 +1,7 @@
+server:
+  disable: true
 clients:
-  - url: http://192.168.1.162:3100/api/prom/push
+  - url: http://127.0.0.1:3100/api/prom/push
 positions:
   filename: "/run/promtail/positions.yaml"
 scrape_configs:

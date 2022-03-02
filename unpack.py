@@ -36,42 +36,12 @@ for filename in os.listdir(src_dir):
 diff_dir = os.path.join(dest_dir, "diffs")
 os.makedirs(diff_dir)
 
-print("Starting loki container")
-run(["docker", "rm", "-f", "loki"])
-lokiconfig_dir = os.path.abspath(os.path.join(os.getcwd(), "lokiconfig"))
-lokidata_dir = os.path.join(dest_dir, "loki")
-os.makedirs(lokidata_dir)
-cmdline = [
-  "docker", "run", "-d", "--name=loki", "-u=0",
-  f"-v={lokiconfig_dir}:/etc/loki:z",
-  f"-v={lokidata_dir}:/srv/loki:z",
-  "-p=3100:3100",
-  "-ti", "docker.io/grafana/loki:2.4.0"
-]
-run(cmdline)
-
-print("Starting grafana container")
-run(["docker", "rm", "-f", "grafana"])
-cmdline = [
-  "docker", "run", "-d", "--name=grafana",
-  "-p=3000:3000",
-  "-ti", "docker.io/grafana/grafana:8.4.2"
-]
-run(cmdline)
-
-print("Starting promtail container")
-run(["docker", "rm", "-f", "promtail"])
-promtailconfig_dir = os.path.abspath(os.path.join(os.getcwd(), "promtailconfig"))
-promtaildata_dir = os.path.join(dest_dir, "promtail")
-os.makedirs(promtaildata_dir)
-cmdline = [
-  "docker", "run", "-d", "--name=promtail",
-  f"-v={promtailconfig_dir}:/etc/promtail:z",
-  f"-v={diff_dir}:/tmp/log:z",
-  f"-v={promtaildata_dir}:/run/promtail:z",
-  "-ti", "docker.io/grafana/promtail:2.4.0"
-]
-run(cmdline)
+print("Starting pod")
+# Make sure configmap has path to diff_dir
+pod_path = "podman/pod.yml"
+run(["sed", "-i", f"s;foo;{diff_dir};g", pod_path])
+run(["podman", "pod", "rm", "-f", "insights-to-loki"])
+run(["podman", "play", "kube", pod_path])
 
 print(f"Building file diffs in {diff_dir}")
 
